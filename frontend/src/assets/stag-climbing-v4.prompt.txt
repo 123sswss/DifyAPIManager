@@ -1,0 +1,3 @@
+Mode: built-in image_gen edit; transparent_background=true
+Input: stag-climbing-v3.png
+Prompt: Edit only the two front legs. Match their perspective to the forward/three-quarter chest and head: nearly straight weight-bearing forelegs, subtle natural joint bend in depth, compact hooves seen mostly head-on, pointing toward viewer/slightly diagonally forward. Maintain raised front foothold about 110-130 pixels above the hind hooves with small perspective offset. Preserve both hind legs, torso, head, antlers, orientation, color and transparency. Isolated solid-filled deer only.

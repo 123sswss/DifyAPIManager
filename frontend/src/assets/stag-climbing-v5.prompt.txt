@@ -1,0 +1,3 @@
+Mode: built-in image_gen edit; transparent_background=true
+Input: stag-climbing-v4.png
+Prompt: Edit only the front legs below the chest. Shorten their apparent upper sections by 25-30% through foreshortening toward the viewer, taper gently into compact carpal joints, keep slender lower cannon sections approximately equal in length with slight perspective difference. Raise forehooves to strengthen the elevated foothold. Mostly front-facing compact hooves, near-level front soles with small depth offset. Preserve head, antlers, torso, hindlegs, color, framing and transparency. Isolated solid silhouette only.

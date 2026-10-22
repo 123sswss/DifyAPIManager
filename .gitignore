@@ -1,0 +1,13 @@
+dify_probe.ini
+dify-report-*.json
+__pycache__/
+dify_gateway.ini
+gateway.sqlite3*
+
+node_modules/
+dist/
+.venv/
+.env
+.env.*
+!.env.example
+*.log

@@ -1,0 +1,3 @@
+Built-in image_gen edit, transparent_background=true.
+Reference: codex-clipboard-de1d97c6-94d6-4db0-b528-4b1dba91e38e.png
+Extract the reference deer as an isolated transparent asset. Preserve organic landscape illustration style, substantial torso and antlers. Three-quarter body and forward-facing head, chest and face visible, rump receding left. Change stance to forehooves planted higher and hindhooves lower, proud level head. Solid dark muted blue-teal, opaque face and body, natural gaps only between legs and antlers. Entire animal visible. Remove landscape and ground.

@@ -1,0 +1,2 @@
+Mode: built-in image_gen; transparent_background: true
+Prompt: One mature stag, right-facing side profile, just climbed onto a lookout. Forehooves planted higher than hindhooves, weight-bearing legs, proud raised head, substantial chest and ribcage, strong neck, broad branching antlers. Minimal vector-like dark blue-green silhouette, transparent background, full body and antlers visible. Isolated deer only, no rock, landscape, cast shadow, text or border. Modest resolution sufficient.
