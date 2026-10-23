@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import StarMap from './StarMap.vue'
 import DeerSilhouette from './DeerSilhouette.vue'
 import { STAR_DEGREES_PER_HOUR, timeOfDay, sunPosition, sunReflection } from '../scene/motion.js'
@@ -8,6 +8,11 @@ import { leftCape, leftFaces, capeGrass, capeCracks, capeTransform, rightCape, r
 import { projectionLight, projectionMatrix } from '../scene/projections.js'
 import { wavePaths } from '../scene/waves.js'
 import { NIGHT_COLORS, nightAmount } from '../scene/lighting.js'
+const props = defineProps({ animated: { type: Boolean, default: true } })
+const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)')
+const motionAllowed = ref(!motionPreference.matches)
+const motionEnabled = computed(() => props.animated && motionAllowed.value)
+function updateMotionPreference(event) { motionAllowed.value = !event.matches }
 const paletteHour = ref(12)
 const starRotation = ref(null)
 const sun = ref(null)
@@ -37,6 +42,12 @@ function animateWaves(now) {
   waveFrame = requestAnimationFrame(animateWaves)
 }
 function resetWaveClock() { wavePrevious = null }
+function updateWaveAnimation() {
+  cancelAnimationFrame(waveFrame)
+  resetWaveClock()
+  if (motionEnabled.value && scene.value) waveFrame = requestAnimationFrame(animateWaves)
+}
+watch(motionEnabled, updateWaveAnimation)
 const aspect = ref(1)
 const viewport = ref({ width: 1920, height: 1080 })
 let observer
@@ -54,11 +65,13 @@ onMounted(() => {
   observer.observe(scene.value)
   setTime(12)
   paintWaves()
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) waveFrame = requestAnimationFrame(animateWaves)
+  updateWaveAnimation()
+  motionPreference.addEventListener('change', updateMotionPreference)
   document.addEventListener('visibilitychange', resetWaveClock)
 })
 onUnmounted(() => {
   observer?.disconnect()
+  motionPreference.removeEventListener('change', updateMotionPreference)
   cancelAnimationFrame(waveFrame)
   document.removeEventListener('visibilitychange', resetWaveClock)
 })
@@ -132,7 +145,7 @@ const starFrame = computed(() => {
 </script>
 
 <template>
-  <svg ref="scene" class="coast-scene" :style="light.style" viewBox="0 0 1920 1080" preserveAspectRatio="none" role="img" aria-label="平潭风貌的矢量海岸：岩石山、弧形沙湾与旋转的海上风力发电机，光色随预览时间变化">
+  <svg ref="scene" class="coast-scene" :class="{ 'motion-paused': !motionEnabled }" :style="light.style" viewBox="0 0 1920 1080" preserveAspectRatio="none" role="img" aria-label="平潭风貌的矢量海岸：岩石山、弧形沙湾与旋转的海上风力发电机，光色随预览时间变化">
     <defs>
       <linearGradient id="sky" x2="0" y2="1"><stop stop-color="var(--sky-top)" /><stop offset="1" stop-color="var(--sky-bottom)" /></linearGradient>
       <linearGradient id="sea" x2="0" y2="1"><stop stop-color="var(--sea)" /><stop offset="1" stop-color="var(--shallows)" /></linearGradient>
@@ -223,6 +236,7 @@ const starFrame = computed(() => {
 <style scoped>
 .coast-scene { display: block; width: 100%; height: 100%; }
 .rotor { animation: turn 22s linear infinite; transform-origin: 0 0; }
+.motion-paused .rotor { animation-play-state: paused; }
 @keyframes turn { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .rotor { animation-play-state: paused; } }
 </style>

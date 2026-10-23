@@ -2,6 +2,50 @@
 
 Windows + Python 3.10 或更新版本，使用标准库，无需安装依赖。当前提供单上游、单分发 Key 的最简网关和兼容性测试脚本。
 
+## 管理界面预览
+
+`frontend` 使用 Vue 3 + Vite，提供总览、调用日志和设置三个页面。保留海岸背景，可选择跟随当地时间、白天、傍晚、夜晚，切换场景动画；外观偏好保存在当前浏览器。系统开启“减少动态效果”时，场景动画遵循系统设置。
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+`npm run dev` 会先检查并启动 Python 管理后端（8788），再启动 Vite 前端；后端已经运行时会复用。保持终端运行，打开显示的前端本地地址。按 Ctrl+C 会停止本次命令启动的前后端进程，独立启动的后端继续运行。需要单独启动前端时可用 `npm run dev:frontend`。生产构建使用 `npm run build`。
+
+前端通过同源 `/api` 访问管理服务；开发模式由 Vite 转发到 `127.0.0.1:8788`。管理服务可独立于 Dify 启动。超级用户可查看总览、网关日志和用户列表，普通用户可查看自己的账号与外观设置。统计和日志只读取现有网关 SQLite 中的脱敏元数据；数据库尚未生成时显示空状态。网关进程的实时状态与配置修改尚待接入，界面暂不包含应用管理。
+
+## 登录与超级用户
+
+在项目根目录初始化两个超级用户：
+
+```powershell
+python .\manager_server.py --init-superusers
+python .\manager_server.py --set-password crescent039
+python .\manager_server.py --set-password 123sswss
+```
+
+两个账号为 `crescent039` 和 `123sswss`，初始化可重复执行且保留已有密码。初始账号处于“待设置密码”状态；每个账号设置密码后才能登录。密码在终端交互输入，至少 6 个字符，保存为加盐 PBKDF2-SHA256 哈希。设置或重置密码会撤销该账号的已有会话。
+
+启动管理服务：
+
+```powershell
+python .\manager_server.py
+```
+
+生产构建后可直接打开 `http://127.0.0.1:8788`，由该服务同时提供页面和 API。也可运行前面的 Vite 开发命令。管理服务默认仅监听本机；部署到内网时应配置 HTTPS 反向代理，并使用 `--secure-cookie`。API 分发网关仍单独运行在 8787，用户登录与 API 分发 Key 各自独立。
+
+本机创建普通用户：
+
+```powershell
+python .\manager_server.py --create-user 用户名
+```
+
+用户名为 3–48 位字母、数字、下划线、点或短横线。当前最多两个超级用户，普通用户由本机命令创建，暂不提供公开注册和网页账号修改。超级用户可在“用户”页查看账号状态。账号与会话保存到已忽略的 `manager.sqlite3`；可通过 `--database` 指定路径，日志库通过 `--gateway-database` 指定。
+
+会话有效期 8 小时，使用 HttpOnly、SameSite=Strict Cookie，数据库只保存会话令牌哈希。登录具备 5 分钟窗口内的账号与来源地址限次，写接口检查来源和 CSRF。所有 `/api/admin/*` 接口在后端校验超级用户角色，普通用户直接调用返回 403，未登录返回 401。请保护本机账号数据库文件的访问权限。
+
 ## 启动网关
 
 将以下四个文件放在内网机器的同一个目录：`dify_gateway.py`、`dify_gateway.ini`、`dify_probe.py`、已经填好的 `dify_probe.ini`。
@@ -58,7 +102,7 @@ python .\dify_gateway.py --logs
 
 `forwarded` 表示完整转发结束；工作流业务状态由 Dify 响应携带，测试脚本进一步检查 SSE 内的失败事件。记录省略原始地址、Key、完整路径、查询参数和业务正文。转发响应保留 Dify 原始内容，诊断时分享脱敏报告即可。
 
-当前规模：一个上游、一个分发 Key，登录和管理界面后续实现。请求体最大 64 MiB，可通过 `max_body_mb` 调整；上传完整接收后转发，超过 1 MiB 使用临时文件，响应持续流式转发。`upstream_timeout` 默认 180 秒，是上游连接/单次读写等待时限。HTTPS 使用 Python 默认证书验证，自动重定向与系统代理关闭。断开连接会关闭对应上游 HTTP 连接，已启动工作流的停止行为以 Dify 为准。
+当前分发规模：一个上游、一个分发 Key，登录与日志管理由独立的 `manager_server.py` 提供。请求体最大 64 MiB，可通过 `max_body_mb` 调整；上传完整接收后转发，超过 1 MiB 使用临时文件，响应持续流式转发。`upstream_timeout` 默认 180 秒，是上游连接/单次读写等待时限。HTTPS 使用 Python 默认证书验证，自动重定向与系统代理关闭。断开连接会关闭对应上游 HTTP 连接，已启动工作流的停止行为以 Dify 为准。
 
 本地验证使用模拟 Dify，覆盖工作流、SSE、多种 HTTP 方法、原始上传、错误响应、Key 校验、到期、停用、日志和并发额度。真实内网 Dify 的兼容性以 `--gateway` 报告为准。
 
@@ -95,6 +139,7 @@ python .\dify_probe.py --gateway
 - 原始与网关地址、主机/IP、Key、用户输入、模型输出、运行 ID、响应头原文、错误消息和异常原文均省略。未知事件统一写为 `other`。
 - 终端只显示固定提示、目标标签和结果，省略原始响应及 traceback。配置错误仅显示固定错误类别。
 - 脚本读取现有配置文件，省略原始响应文件与敏感值摘要。INI 格式或字段错误仅显示固定错误类别。
+- 给agent用来预览的文件夹位于/frontend/preview，已经忽略，GPT你要是想自己截图测试就在这个文件夹里玩好不好
 
 ## 判定范围
 
