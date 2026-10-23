@@ -6,6 +6,7 @@ import { shadowTriangles, deerShadowFrame } from '../scene/deerShadow.js'
 import { NIGHT_COLORS, deerIllumination } from '../scene/lighting.js'
 
 const props = defineProps({ hour: { type: Number, default: 12 } })
+const emit = defineEmits(['speak'])
 const shadow = ref(null)
 const shadowTiles = []
 const illumination = computed(() => deerIllumination(props.hour))
@@ -22,7 +23,7 @@ defineExpose({ setTime })
 </script>
 
 <template>
-  <g class="deer-silhouette" role="img" aria-label="雄鹿立于岩岸，前蹄踏高、后蹄立低，朝斜前方眺望">
+  <g class="deer-silhouette">
     <defs>
       <!-- The original alpha limits the lighting overlays to the approved deer. -->
       <mask id="coast-stag-alpha" maskUnits="userSpaceOnUse" v-bind="stagPlacement" style="mask-type: alpha">
@@ -52,7 +53,12 @@ defineExpose({ setTime })
         </g>
       </g>
     </g>
-    <image class="deer-image" :href="stagAsset" v-bind="stagPlacement" />
+    <g class="deer-trigger" role="button" tabindex="0" aria-label="和鹿说话"
+      @click.stop="emit('speak')"
+      @keydown.enter.prevent.stop="emit('speak')"
+      @keydown.space.prevent.stop="emit('speak')">
+      <image class="deer-image" :href="stagAsset" v-bind="stagPlacement" />
+    </g>
     <g class="deer-light" mask="url(#coast-stag-alpha)" aria-hidden="true">
       <rect v-bind="stagPlacement" fill="var(--haze)" :opacity="illumination.ambient" />
       <rect v-bind="stagPlacement" fill="#efb17d" :opacity="illumination.warm" />
@@ -63,4 +69,6 @@ defineExpose({ setTime })
 
 <style scoped>
 .deer-silhouette { pointer-events: none; }
+.deer-trigger { pointer-events: all; cursor: default; outline: none; }
+.deer-trigger:focus-visible { outline: 2px solid var(--accent, #3f7975); outline-offset: 5px; border-radius: 6px; }
 </style>

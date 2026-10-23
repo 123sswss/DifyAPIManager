@@ -4,6 +4,7 @@ import CoastScene from './components/CoastScene.vue'
 import LoginPanel from './components/LoginPanel.vue'
 import RequestTable from './components/RequestTable.vue'
 import { api } from './api.js'
+import { stagPlacement, capeOffsetX } from './scene/landscape.js'
 import './workspace.css'
 const currentUser = ref(null)
 const csrf = ref('')
@@ -26,7 +27,19 @@ const now = ref(new Date())
 const dateFilter = ref('today')
 const statusFilter = ref('all')
 const notice = ref('')
-let clockTimer, noticeTimer
+const deerSpeaking = ref(false)
+const speechKey = ref(0)
+const deerSpeechPosition = {
+  left: `${(stagPlacement.x + capeOffsetX + stagPlacement.width / 2) / 1920 * 100}%`,
+  top: `${stagPlacement.y / 1080 * 100}%`,
+}
+let clockTimer, noticeTimer, speechTimer
+function speakDeer() {
+  clearTimeout(speechTimer)
+  speechKey.value++
+  deerSpeaking.value = true
+  speechTimer = setTimeout(() => { deerSpeaking.value = false }, 4000)
+}
 const sceneHour = computed(() => theme.value === 'system' ? now.value.getHours() + now.value.getMinutes() / 60 : ({ day: 12, evening: 18.5, night: 0 })[theme.value])
 const isNight = computed(() => sceneHour.value < 6 || sceneHour.value >= 20)
 const dateLabel = computed(() => new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(now.value))
@@ -93,12 +106,13 @@ watch([theme, animated], () => {
 })
 watch(sceneHour, syncScene)
 onMounted(() => { restoreSession(); syncScene(); clockTimer = setInterval(() => { now.value = new Date() }, 30000) })
-onUnmounted(() => { clearInterval(clockTimer); clearTimeout(noticeTimer) })
+onUnmounted(() => { clearInterval(clockTimer); clearTimeout(noticeTimer); clearTimeout(speechTimer) })
 </script>
 
 <template>
   <main class="workspace" :class="{ 'is-night': isNight }">
-    <div class="landscape-backdrop" aria-hidden="true"><CoastScene ref="coast" :animated="animated" /></div>
+    <div class="landscape-backdrop"><CoastScene ref="coast" :animated="animated" @deer-click="speakDeer" /></div>
+    <div v-if="deerSpeaking" :key="speechKey" class="deer-speech" :style="deerSpeechPosition" role="status">这倒是提醒我了</div>
     <section class="workspace-panel" :class="{ 'login-panel': !currentUser }" aria-label="Dify API 管理平台">
       <header class="topbar">
         <a class="brand" href="#overview" @click.prevent="activeTab = 'overview'" aria-label="返回总览"><span class="brand-mark" aria-hidden="true">≈</span><span>Dify <strong>API Manager</strong></span></a>

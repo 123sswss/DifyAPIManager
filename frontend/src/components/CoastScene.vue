@@ -9,6 +9,7 @@ import { projectionLight, projectionMatrix } from '../scene/projections.js'
 import { wavePaths } from '../scene/waves.js'
 import { NIGHT_COLORS, nightAmount } from '../scene/lighting.js'
 const props = defineProps({ animated: { type: Boolean, default: true } })
+const emit = defineEmits(['deer-click'])
 const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)')
 const motionAllowed = ref(!motionPreference.matches)
 const motionEnabled = computed(() => props.animated && motionAllowed.value)
@@ -145,7 +146,7 @@ const starFrame = computed(() => {
 </script>
 
 <template>
-  <svg ref="scene" class="coast-scene" :class="{ 'motion-paused': !motionEnabled }" :style="light.style" viewBox="0 0 1920 1080" preserveAspectRatio="none" role="img" aria-label="平潭风貌的矢量海岸：岩石山、弧形沙湾与旋转的海上风力发电机，光色随预览时间变化">
+  <svg ref="scene" class="coast-scene" :class="{ 'motion-paused': !motionEnabled }" :style="light.style" viewBox="0 0 1920 1080" preserveAspectRatio="none" role="group" aria-label="平潭风貌的矢量海岸：岩石山、弧形沙湾与旋转的海上风力发电机，光色随预览时间变化">
     <defs>
       <linearGradient id="sky" x2="0" y2="1"><stop stop-color="var(--sky-top)" /><stop offset="1" stop-color="var(--sky-bottom)" /></linearGradient>
       <linearGradient id="sea" x2="0" y2="1"><stop stop-color="var(--sea)" /><stop offset="1" stop-color="var(--shallows)" /></linearGradient>
@@ -222,7 +223,7 @@ const starFrame = computed(() => {
         <path v-for="(patch, i) in capeGrass" :key="`grass-${i}`" :d="patch" fill="var(--grass)" />
         <path :d="capeCracks" fill="none" stroke="var(--rock-dark)" stroke-width="1.7" opacity=".2" stroke-linecap="round" />
       </g>
-      <DeerSilhouette ref="deer" :hour="paletteHour" />
+      <DeerSilhouette ref="deer" :hour="paletteHour" @speak="emit('deer-click')" />
     </g>
     <g class="right-cape">
       <use href="#right-cape-outline" fill="var(--rock-mid)" />
