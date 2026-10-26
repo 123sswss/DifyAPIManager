@@ -3,7 +3,6 @@ dify-report-*.json
 __pycache__/
 dify_gateway.ini
 gateway.sqlite3*
-manager.sqlite3*
 
 /frontend/preview
 
